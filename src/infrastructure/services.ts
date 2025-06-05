@@ -38,7 +38,7 @@ const services = createServices(
 				},
 				data: {
 					methods: ["GET"],
-					path: "/app/WAG12/ATL/000122?request=XDATA",
+					path: "/app/WAG12/ATL?request=XDATA",
 				},
 			},
 		},
