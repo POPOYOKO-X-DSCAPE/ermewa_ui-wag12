@@ -13,6 +13,7 @@
 		"build": "vite build"
 	},
 	"dependencies": {
+		"@ariakit/react": "^0.4.17",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0"
 	},
