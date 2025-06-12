@@ -13,7 +13,6 @@ jobs:
 
     - name: Mirror push to target repository
       run: |
-        export PUBLISHERBOTPAT=your_personal_access_token
         echo "${secrets.ermewa_ui-wag12}"
         # git config --global user.name "louis-ermewa"
         # git config --global user.email "louis.dauvergne.ext@ermewa.com"
