@@ -5,7 +5,7 @@
 	"type": "module",
 	"repository": {
 		"type": "github",
-		"url": "git@github.com:POPOYOKO-X-DSCAPE/ermewa_ui-wag12.git"
+		"url": "https://github.com/POPOYOKO-X-DSCAPE/ermewa_ui-wag12.git"
 	},
 	"scripts": {
 		"dev": "vite --port 3000",

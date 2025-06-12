@@ -1,0 +1,26 @@
+name: Deployement
+
+on: [ push ]
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Mirror push to target repository
+      run: |
+        export PUBLISHERBOTPAT=your_personal_access_token
+        echo "${secrets.ermewa_ui-wag12}"
+        # git config --global user.name "louis-ermewa"
+        # git config --global user.email "louis.dauvergne.ext@ermewa.com"
+        # git remote add mirror git@github.com:ermewa/ui-wag12.git
+        # git branch -v
+        # mkdir -p ~/.ssh
+        # chmod 700 ~/.ssh
+        # echo "${{secrets.LOUIS_EMRMEWA_GIT_SSH_PRIVATE_KEY}}" > ~/.ssh/id_rsa
+        # chmod 600 ~/.ssh/id_rsa
+        # git push -u mirror
