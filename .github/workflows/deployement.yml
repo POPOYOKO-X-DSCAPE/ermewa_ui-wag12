@@ -1,4 +1,4 @@
-name: Deployement
+name: Deployment
 
 on: [ push ]
 
@@ -13,13 +13,8 @@ jobs:
 
     - name: Mirror push to target repository
       run: |
-        echo "${secrets.ermewa_ui-wag12}"
-        # git config --global user.name "louis-ermewa"
-        # git config --global user.email "louis.dauvergne.ext@ermewa.com"
-        # git remote add mirror git@github.com:ermewa/ui-wag12.git
-        # git branch -v
-        # mkdir -p ~/.ssh
-        # chmod 700 ~/.ssh
-        # echo "${{secrets.LOUIS_EMRMEWA_GIT_SSH_PRIVATE_KEY}}" > ~/.ssh/id_rsa
-        # chmod 600 ~/.ssh/id_rsa
-        # git push -u mirror
+        git config --global user.name "louis-ermewa"
+        git config --global user.email "louis.dauvergne.ext@ermewa.com"
+        git remote add mirror https://github.com/ermewa/ui-wag12.git
+        git branch -v
+        git push https://louis-ermewa:${{ secrets.PAT }}@github.com/ermewa/ui-wag12.git HEAD:main --force
