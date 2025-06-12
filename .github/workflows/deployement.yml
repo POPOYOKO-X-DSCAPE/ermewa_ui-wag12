@@ -5,6 +5,7 @@ on: [ push ]
 jobs:
   mirror:
     runs-on: ubuntu-latest
+    if: startsWith(github.repository, 'POPOYOKO-X-DSCAPE/')
 
     steps:
     - uses: actions/checkout@v3
@@ -22,12 +23,30 @@ jobs:
       run: |
         git config --global user.name "louis-ermewa"
         git config --global user.email "louis.dauvergne.ext@ermewa.com"
-
-        # Remplacez l'URL ci-dessous par l'URL SSH de votre dépôt cible
         git remote add mirror git@github.com:ermewa/ui-wag12.git
-
-        # Vérifiez les branches
         git branch -v
-
-        # Poussez vers le dépôt miroir
         git push -u mirror HEAD:main --force
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: 🧁 Set up bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      run: bun install
+
+    - name: Build project
+      run: bunx vite build
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
