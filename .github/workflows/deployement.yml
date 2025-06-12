@@ -11,10 +11,23 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.LOUIS_EMRMEWA_GIT_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+
     - name: Mirror push to target repository
       run: |
         git config --global user.name "louis-ermewa"
         git config --global user.email "louis.dauvergne.ext@ermewa.com"
-        git remote add mirror https://github.com/ermewa/ui-wag12.git
+
+        # Remplacez l'URL ci-dessous par l'URL SSH de votre dépôt cible
+        git remote add mirror git@github.com:ermewa/ui-wag12.git
+
+        # Vérifiez les branches
         git branch -v
-        git push https://louis-ermewa:${{ secrets.PAT }}@github.com/ermewa/ui-wag12.git HEAD:main --force
+
+        # Poussez vers le dépôt miroir
+        git push -u mirror HEAD:main --force
