@@ -41,7 +41,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        bunx vite build || (bun check && bun add $(bun check | grep -oP '(?<=\s)[^ ]+(?=\s)' | tr '\n' ' '))
+        bunx vite build
 
     - name: Build project
       run: bunx vite build
