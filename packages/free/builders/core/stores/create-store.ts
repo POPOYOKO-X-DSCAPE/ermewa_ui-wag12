@@ -10,7 +10,7 @@ const createStore = <T extends Record<string, unknown>>(data: T, disableKeysChec
     dependencies?: Array<keyof T>;
   }> = [];
 
-  function set(value: T, silent: boolean = false): void {
+  function set(value: T, silent = false): void {
     const requiredKeys = Object.keys(data);
     if (requiredKeys.some(requiredKey => !Object.keys(value).includes(requiredKey))) {
       throw new Error(`Please define all required keys: ${requiredKeys.join(', ')}`);
@@ -22,7 +22,7 @@ const createStore = <T extends Record<string, unknown>>(data: T, disableKeysChec
     if (!silent) notifySubscribers();
   }
 
-  function patch(changes: Partial<T>, silent: boolean = false): void {    
+  function patch(changes: Partial<T>, silent = false): void {    
     validateKeys(changes);
     reference.state = { ...reference.state, ...changes };
     
@@ -38,14 +38,14 @@ const createStore = <T extends Record<string, unknown>>(data: T, disableKeysChec
   }
 
   function notifySubscribers(partialState?: Partial<T>): void {
-    subscribers.forEach(({ callback, dependencies }) => {
+    for (const { callback, dependencies } of subscribers) {
       if (!dependencies || shouldTrigger(dependencies, partialState)) {
         callback({
           state: Object.freeze({ ...reference.state }),
           diff: partialState || {}
         });
       }
-    });
+    }
   }
 
   function shouldTrigger(

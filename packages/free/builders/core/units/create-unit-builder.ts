@@ -10,12 +10,14 @@ const createUnitBuilder = <T extends Record<string, unknown>>(
 
   const store = createStore(initialState);
 
+  const referenceErrors = {} as Unit<T>["status"]["errors"];
+  for (const key of Object.keys(schema)) {
+    (referenceErrors as Record<string, unknown>)[key] = [];
+  }
+
   const reference = {
     status: {
-      errors: Object.keys(schema).reduce((acc, key) => ({
-        ...acc,
-        [key]: [] as string[]
-      }), {}),
+      errors: referenceErrors,
       isValid: false,
     } as Unit<T>['status'],
     meta: {
@@ -36,10 +38,10 @@ const createUnitBuilder = <T extends Record<string, unknown>>(
   }
 
   function updateStatus(newValue: Partial<T>) {
-    const schemaSlice = Object.keys(newValue).reduce((acc, property: keyof T) => ({
-      ...acc,
-      [property]: schema[property]
-    }), {} as Partial<typeof schema>);
+    const schemaSlice = {} as Partial<typeof schema>;
+    for (const property of Object.keys(newValue)) {
+      schemaSlice[property as keyof T] = schema[property as keyof T];
+    }
 
     const isStatusValid = Object.entries(schemaSlice).map(([property, validator]: [keyof T, TypeDefinitions<T>[keyof T]]) => {
       reference.status.errors[property] = [];

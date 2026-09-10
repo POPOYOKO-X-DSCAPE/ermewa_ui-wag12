@@ -21,10 +21,10 @@ const createUnitsBuilder = <
     const units = {} as Units<Opt>;
 
     for (const property in options) {
-      if (options.hasOwnProperty(property) && schemas[property]) {
+      if (Object.hasOwn(options, property) && schemas[property]) {
         // @ts-ignore
         const createUnit = createUnitBuilder(schemas[property]);
-        units[property] = createUnit(options[property] as any) as unknown as Units<Opt>[typeof property];
+        units[property] = createUnit(options[property] as unknown as U[Extract<keyof Opt, string>]) as unknown as Units<Opt>[typeof property];
       }
     }
 

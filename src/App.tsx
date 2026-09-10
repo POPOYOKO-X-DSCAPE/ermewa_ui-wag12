@@ -1,123 +1,146 @@
 import { Heading, HeadingLevel } from "@ariakit/react";
-import { useEffect, useState } from "react";
-
-import { App as AbstractApp, Header } from "@packages/ui";
-
-import services from "./infrastructure/services";
-
-import type { AppData } from "./domain/types/app-data";
-import type { AppProfileInterface } from "./domain/types/app-profile";
-import type {
-  AppProfileBodyResponse,
-  LayoutItem,
-} from "./interface-adapters/external-types/app-profile";
-import { adaptAppProfileResponse } from "./interface-adapters/gateways/app-profile/response-adapter";
-
-import { Stack } from "@packages/ui/abstract/stack";
+import { App as AbstractApp, Header, Stack } from "@packages/ui";
 import { SideBar } from "@packages/ui/components";
-import type { SideBarItems } from "@packages/ui/components/sidebar";
-import { Sheet } from "./components/sheet";
-import dataMock from "./infrastructure/mocks/xdata-response.json" with { type: "json" };
-import parametersMock from "./infrastructure/mocks/xprm-response.json" with { type: "json" };
+import { useMemo } from "react";
+
+import type { LayoutItem } from "./interface-adapters/external-types/app-profile";
+import { Sheet } from "./presentation/components/sheet";
+import WagonSelect from "./presentation/components/wagon-select"; // ✅ ajout
+import { useAppContext } from "./presentation/contexts/app-context";
+
+const buildSideBarItems = (items?: LayoutItem[]) => {
+	if (items) {
+		const proc = (items: LayoutItem[]) =>
+			items
+				.map((item) =>
+					!item.layout
+						? {
+								name: item.title?.defaultTxt,
+								alias: item.title?.alias,
+							}
+						: {
+								name: item.title?.defaultTxt,
+								alias: item.title?.alias,
+								children: item.layout.items.map((item) => ({
+									name: item.title?.defaultTxt,
+									alias: item.title?.alias,
+								})),
+							},
+				)
+				.filter((item) => item.name !== undefined);
+
+		return proc(items);
+	}
+	return undefined;
+};
 
 const App = () => {
-  const [state, setState] = useState<AppProfileInterface | null>(null);
-  const [bindings, setBindings] = useState<AppData["xData"] | null>(null);
-  const [error, setError] = useState(false);
+	const { payload, loading, error, reload } = useAppContext();
 
-  useEffect(() => {
-    const init = async () => {
-      try {
-        if (import.meta.env.DEV) {
-          setTimeout(() => {
-            // @ts-ignore
-            setState(adaptAppProfileResponse(parametersMock));
-          }, 500);
+	// ✅ Cas de chargement
+	if (loading) return <AbstractApp>loading ...</AbstractApp>;
+	if (error || !payload) {
+		return (
+			<AbstractApp>
+				<div className="p-4 text-red-600">
+					<p>Erreur : {error ?? "app couldn't load."}</p>
+					<button
+						type="button"
+						onClick={() => void reload()}
+						className="mt-2 rounded bg-gray-200 px-3 py-1"
+					>
+						Relancer l'application
+					</button>
+				</div>
+			</AbstractApp>
+		);
+	}
 
-          setTimeout(() => {
-            // @ts-ignore
-            setBindings(dataMock.xData);
-          }, 1000);
-        } else {
-          await services.dummy.get.auth();
-          const { data: appProfile } =
-            await services.wag12.get.parameters<AppProfileBodyResponse>();
-          const adaptedProfile = adaptAppProfileResponse(appProfile);
-          console.log(adaptedProfile);
-          setState(adaptedProfile);
-          const { data: appData } = await services.wag12.get.data<AppData>();
-          console.log(appData);
-          setBindings(appData.xData);
-        }
-      } catch (error) {
-        console.error("Erreur lors de la récupération des données :", error);
-        setError(true);
-      }
-    };
+	// ✅ Scénario 1 : liste de wagons (wagonSelection présent)
+	if (
+		payload.wagonSelection &&
+		!payload.appProfile &&
+		!payload.wagonData
+	) {
+		return (
+			<AbstractApp>
+				<WagonSelect wagons={payload.wagonSelection.selection} />
+			</AbstractApp>
+		);
+	}
 
-    init();
-  }, []);
+	// ✅ Scénario 2 : données de wagon et profil (détails)
+	if (payload.appProfile && payload.wagonData) {
+		const layoutItems = useMemo(
+			() =>
+				payload.appProfile?.profile.parameters.display.value
+					.displayDetail.content.layout?.items ?? [],
+			[payload],
+		);
 
-  const renderSideBarItems = (): SideBarItems | undefined => {
-    const items =
-      state?.profile.parameters.display.value.displayDetail.content.layout
-        ?.items;
+		const bindings = useMemo(
+			() => payload.wagonData?.data || null,
+			[payload],
+		);
 
-    if (items) {
-      const proc = (items: LayoutItem[]): SideBarItems =>
-        items
-          .map((item) =>
-            !item.layout
-              ? {
-                  name: item.title?.defaultTxt,
-                  trigger: () => console.log(item),
-                }
-              : {
-                  name: item.title?.defaultTxt,
-                  trigger: () => console.log(item),
-                  children: item.layout.items.map((item) => ({
-                    name: item.title?.defaultTxt,
-                    trigger: () => console.log(item),
-                  })),
-                }
-          )
-          .filter((item) => item.name !== undefined) as SideBarItems;
+		const sideBarItems = useMemo(
+			() => buildSideBarItems(layoutItems),
+			[layoutItems],
+		);
 
-      return proc(items);
-    }
-    return undefined;
-  };
+		const lang = payload.appProfile.user.lang[0];
+		const title = payload.appProfile.app.name[lang] ?? "Railcar sheet";
 
-  const sideBarItems = renderSideBarItems();
+		return (
+			<AbstractApp>
+				<HeadingLevel>
+					<Header>
+						<Heading>{title}</Heading>
+					</Header>
+					<Stack direction="row" grow>
+						<SideBar>
+							{sideBarItems?.map((item) =>
+								item.children ? (
+									<SideBar.Group
+										key={item.alias ?? item.name}
+										href={`#${item.alias}`}
+									>
+										{item.name}
+										{item.children?.map((child) => (
+											<SideBar.Element
+												key={child.alias ?? child.name}
+												href={`#${child.alias}`}
+											>
+												{child.name}
+											</SideBar.Element>
+										))}
+									</SideBar.Group>
+								) : (
+									<SideBar.Element
+										key={item.alias ?? item.name}
+										href={`#${item.alias}`}
+									>
+										{item.name}
+									</SideBar.Element>
+								),
+							)}
+						</SideBar>
 
-  return (
-    <AbstractApp>
-      {state ? (
-        <HeadingLevel>
-          <Header>
-            <Heading>{state.app.name[state.user.lang[0]]}</Heading>
-          </Header>
-          <Stack direction="row">
-            {sideBarItems && <SideBar content={sideBarItems} />}
-            {state.profile.parameters.display.value.displayDetail.content.layout
-              ?.items && (
-              <Sheet
-                bindings={bindings}
-                items={
-                  state.profile.parameters.display.value.displayDetail.content
-                    .layout?.items
-                }
-              />
-            )}
-          </Stack>
-        </HeadingLevel>
-      ) : error ? (
-        "error: app couldn't load."
-      ) : (
-        "loading ..."
-      )}
-    </AbstractApp>
-  );
+						{layoutItems && (
+							<Sheet bindings={bindings} items={layoutItems} />
+						)}
+					</Stack>
+				</HeadingLevel>
+			</AbstractApp>
+		);
+	}
+
+	// ✅ Cas fallback (aucun des deux scénarios)
+	return (
+		<AbstractApp>
+			<div className="p-4">Aucune donnée disponible.</div>
+		</AbstractApp>
+	);
 };
 
 export default App;

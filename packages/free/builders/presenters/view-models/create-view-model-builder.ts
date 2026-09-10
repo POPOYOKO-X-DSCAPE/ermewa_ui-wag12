@@ -3,6 +3,7 @@ import type { Entity, Funnel, Repository, SubscriberFunction } from '../../domai
 import createStore from '../../core/stores/create-store';
 import type { Store } from '../../core/types';
 
+// biome-ignore lint/suspicious/noExplicitAny: repository constraint needs any to stay covariant across entity shapes
 const createViewModelBuilder = <R extends Record<string, Repository<any>>>(
   repositories: R
 ) => {
@@ -14,18 +15,22 @@ const createViewModelBuilder = <R extends Record<string, Repository<any>>>(
   function createViewModel<T extends Record<string, unknown>>(
     computedProperties: ComputedProperties<T>
   ) {
-    const dependencyStores = Object.keys(computedProperties).reduce((acc, propertyName) => ({
-      ...acc,
-      [propertyName]: createStore(Object.keys(repositories).reduce((subAcc, repositoryName) => ({
-        ...subAcc,
-        [repositoryName]: undefined
-      }), {} as { [Kb in keyof R]: Record<string, ReturnType<R[Kb]['read']>> | undefined }))
-    }), {} as { [K in keyof ComputedProperties<T>]: Store<{ [Kb in keyof R]: Record<string, ReturnType<R[Kb]['read']>> | undefined }> });
-    
-    const dependencies = (propertyName: string) =>
-      Object.entries(repositories).reduce((acc, [repositoryName, repository]) => ({
-        ...acc,
-        [repositoryName]: <Tb extends Record<string, unknown>>(funnel: Funnel<Tb>) => {
+    const dependencyStores = {} as { [K in keyof ComputedProperties<T>]: Store<{ [Kb in keyof R]: Record<string, ReturnType<R[Kb]['read']>> | undefined }> };
+
+    for (const propertyName of Object.keys(computedProperties)) {
+      const repositoryRecord = {} as { [Kb in keyof R]: Record<string, ReturnType<R[Kb]['read']>> | undefined };
+      for (const repositoryName of Object.keys(repositories)) {
+        (repositoryRecord as Record<string, unknown>)[repositoryName] = undefined;
+      }
+
+      (dependencyStores as Record<string, unknown>)[propertyName] = createStore(repositoryRecord);
+    }
+
+    const dependencies = (propertyName: string) => {
+      const repositoryReads = {} as { [K in keyof R]: R[K]['read'] };
+
+      for (const [repositoryName, repository] of Object.entries(repositories)) {
+        (repositoryReads as Record<string, unknown>)[repositoryName] = <Tb extends Record<string, unknown>>(funnel: Funnel<Tb>) => {
           let data: Record<string, ReturnType<R[string]["read"]>> | undefined;
           if (dependencyStores[propertyName].state[repositoryName] !== undefined) {
             data = dependencyStores[propertyName].state[repositoryName];
@@ -34,7 +39,7 @@ const createViewModelBuilder = <R extends Record<string, Repository<any>>>(
             
             let currentIds: string[] = Object.keys(<object>data || {});
             const subscriber: SubscriberFunction<Entity<Record<string, unknown>>> = ({ event, diff }) => {              
-              let diffIds = Object.keys(diff);
+              const diffIds = Object.keys(diff);
 
               if (event === 'onDelete') {
                 const toDeleteIds = currentIds.filter(id => diffIds.includes(id));
@@ -64,32 +69,34 @@ const createViewModelBuilder = <R extends Record<string, Repository<any>>>(
                 // end of funnel
                 
                 switch (event) {
-                  case 'onCreate':
+                  case 'onCreate': {
                     if (!funneledDiff.length) return;
   
                     const createdIds = funneledDiff.map(entity => entity.meta.id);                  
                     currentIds = [...currentIds, ...createdIds];
                     break;
-                  case 'onUpdate':
+                  }
+                  case 'onUpdate': {
                     const funneledIds = funneledDiff.map(entity => entity.meta.id);
                     const toCreateIds = funneledIds.length ? diffIds.filter(id => !currentIds.includes(id) && funneledIds.includes(id)) : [];
                     const toDeleteIds = currentIds.length  ? diffIds.filter(id => currentIds.includes(id) && !funneledIds.includes(id)) : [];
   
                     if (!toCreateIds.length && !toDeleteIds.length && !funneledIds.length) return;                    
-  
+                    
                     const remainingIds = toDeleteIds.length ? currentIds.filter(id => !toDeleteIds.includes(id)) : currentIds;
                     currentIds = [...remainingIds, ...toCreateIds];
                     break;
+                  }
                 };
               }
               
+              const entitySlice = {} as Record<string, unknown>;
+              for (const entityId of currentIds) {
+                entitySlice[entityId] = repository.state[entityId];
+              }
+
               dependencyStores[propertyName].patch({
-                  [repositoryName]: {
-                    ...currentIds.reduce((acc, entityId) => ({
-                      ...acc,
-                      [entityId]: repository.state[entityId]
-                    }), {})
-                  }
+                  [repositoryName]: entitySlice
                 } as Partial<{ [Kb in keyof R]: Record<string, ReturnType<R[Kb]["read"]>> }>
               );
             }
@@ -98,24 +105,27 @@ const createViewModelBuilder = <R extends Record<string, Repository<any>>>(
           }
           
           return data || {};
-        }
-      }), {} as { [K in keyof R]: R[K]['read'] });
+        };
+      }
 
-    const initialData = Object.keys(computedProperties).reduce((acc, propertyName) => ({
-      ...acc,
-      [propertyName]: computedProperties[propertyName](dependencies(propertyName))
-    }), {} as { [K in keyof ComputedProperties<T>]: ReturnType<ComputedProperties<T>[K]> });
+      return repositoryReads;
+    };
+
+    const initialData = {} as { [K in keyof ComputedProperties<T>]: ReturnType<ComputedProperties<T>[K]> };
+    for (const propertyName of Object.keys(computedProperties)) {
+      (initialData as Record<string, unknown>)[propertyName] = computedProperties[propertyName](dependencies(propertyName));
+    }
 
     const store = createStore(initialData);
 
-    Object.entries(dependencyStores).forEach(([propertyName, dependencyStore]) => {
+    for (const [propertyName, dependencyStore] of Object.entries(dependencyStores)) {
       
       dependencyStore.onChange(() => {                        
         store.patch({
           [propertyName]: computedProperties[propertyName](dependencies(propertyName))
         } as { [K in keyof ComputedProperties<T>]: ReturnType<ComputedProperties<T>[K]>});
       });
-    });
+    }
 
     return store;
   };

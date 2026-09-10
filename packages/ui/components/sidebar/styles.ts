@@ -9,87 +9,44 @@ const Main = css({
 	},
 });
 
-const GroupAction = css({
-	gap: "c.sidebar.element.gap",
-});
-
 const Group = css({
-	bg: "c.sidebar.element.bg.initial",
-	color: "sidebar.element.fg.initial",
-	padding: "c.sidebar.element.padding",
-	gap: "c.sidebar.element.gap",
-	boxSizing: "border-box",
-	paddingRight: "0",
-	_hover: {
-		bg: "c.sidebar.element.bg.hover",
-	},
-	"& .sidebar-element": {
-		paddingLeft: "sidebar.groupChildren.paddingLeft",
-	},
-	"& button": {
-		padding: "sidebar.element.padding",
-		paddingX: "sidebar.element.paddingX",
-		cursor: "pointer",
-	},
+	borderLeftColor: "c.sidebar.border.guide",
+	borderLeftStyle: "solid",
+	borderLeftWidth: "2px",
+	marginLeft: "c.sidebar.element.gap",
+	gap: "s.margin.m",
 });
 
-const GroupParent = css({
-	borderLeftColor: "c.sidebar.fg.initial",
-	borderLeftWidth: "1",
-	borderStyle: "solid",
-	boxSizing: "border-box",
+const Active = css({
+	backgroundColor: "c.sidebar.element.bg.active",
+	color: "c.sidebar.element.fg.active",
 });
 
-const ElementContainer = css({
-	bg: "c.sidebar.element.bg.initial",
-	color: "c.sidebar.element.fg.initial",
-	padding: "c.sidebar.element.padding",
-
-	boxSizing: "border-box",
-	_hover: {
-		bg: "c.sidebar.element.bg.hover",
-	},
+const Button = css({
+	display: "flex",
+	flexGrow: 1,
+	flexShrink: 0,
 	cursor: "pointer",
-});
-
-const Element = css({
-	gap: "c.sidebar.element.padding",
-	borderRadius: "c.sidebar.element.radius",
-	minHeight: "48px",
-	boxSizing: "border-box",
-	cursor: "pointer",
-	"& button": {
-		padding: "sidebar.element.padding",
-		paddingX: "sidebar.element.paddingX",
-		cursor: "pointer",
+	"&:hover": {
+		backgroundColor: "c.sidebar.element.bg.hover",
 	},
-});
-
-const ActiveElement = css({
-	bg: "c.sidebar.element.bg.active",
-	paddingLeft: "c.sidebar.element.padding",
 });
 
 const ElementContent = css({
-	gap: "c.sidebar.element.padding",
-	boxSizing: "border-box",
+	flexShrink: 2,
+	overflowY: "hidden",
+	minHeight: "100%",
 });
 
-const ClickZone = css({
-	boxSizing: "border-box",
-	padding: "c.sidebar.element.padding",
-	flexGrow: 1,
-	marginRight: "c.sidebar.element.padding",
+const DisclosureIcon = css({
+	flexShrink: 0,
 });
 
 export const Styles = {
 	Main,
-	GroupAction,
 	Group,
-	GroupParent,
-	ElementContainer,
-	Element,
-	ActiveElement,
+	Active,
+	Button,
 	ElementContent,
-	ClickZone,
+	DisclosureIcon,
 };

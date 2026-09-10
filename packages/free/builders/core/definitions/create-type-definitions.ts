@@ -30,7 +30,7 @@ const coreTypeDefinitions: CoreTypeDefinitions = {
   })
 };
 
-const createTypeDefinitions = <T extends Record<string, unknown> = {}>(
+const createTypeDefinitions = <T extends Record<string, unknown> = Record<string, unknown>>(
   definitions: TypeDefinitions<T> 
 ) => {
   

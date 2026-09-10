@@ -9,13 +9,17 @@ const createSchemasBuilder = <T extends Record<string, unknown>>(
   schemasDefinitions: U
 ) => {
 
-  const schemas = Object.entries(schemasDefinitions).reduce((acc, [key, schemaDefinition]) => ({
-    ...acc,
-    [key]: Object.entries(schemaDefinition).reduce((schema, [property, typeName]) => ({
-      ...schema,
-      [property]: typeDefinitions[typeName]
-    }), {})
-  }), {} as SchemaBuilderResult<T, U>);
+  const schemas = {} as SchemaBuilderResult<T, U>;
+
+  for (const [key, schemaDefinition] of Object.entries(schemasDefinitions)) {
+    const schemaSlice = {};
+
+    for (const [property, typeName] of Object.entries(schemaDefinition)) {
+      (schemaSlice as Record<string, unknown>)[property] = typeDefinitions[typeName];
+    }
+
+    (schemas as Record<string, unknown>)[key] = schemaSlice;
+  }
 
   return { 
     schemas,

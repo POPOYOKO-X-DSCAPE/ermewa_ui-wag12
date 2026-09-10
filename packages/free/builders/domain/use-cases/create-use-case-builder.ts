@@ -1,11 +1,12 @@
 import type { Repository } from '../types';
 
-type UseCaseContract = Record<string, Function>;
+type UseCaseContract = Record<string, (...args: unknown[]) => unknown>;
 
+// biome-ignore lint/suspicious/noExplicitAny: repository constraint needs any to stay covariant across entity shapes
 const createAbstractUseCaseBuilder = <R extends Record<string, Repository<any>>>(
   repositories: R
 ) => {
-  function createUseCaseBuilder<S extends any>(
+  function createUseCaseBuilder<S>(
     services: S
   ) {
     type Dependencies = { repositories: R, services: S };
