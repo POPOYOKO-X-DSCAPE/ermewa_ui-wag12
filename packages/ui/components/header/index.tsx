@@ -4,15 +4,19 @@ import type { ReactNode } from "react";
 
 interface IHeaderProps {
 	children: ReactNode;
+	className?: string;
 }
 
 const panda = css({
 	bg: "c.header.bg",
 	color: "c.header.fg",
 	position: "sticky",
-	padding: "c.header.padding",
+	top: "0",
+	zIndex: "10",
+	paddingBlock: "c.header.paddingBlock",
+	paddingInline: "c.header.paddingInline",
 });
 
-export const Header = ({ children }: IHeaderProps) => (
-	<header className={classNames(panda)}>{children}</header>
+export const Header = ({ children, className }: IHeaderProps) => (
+	<header className={classNames(panda, className)}>{children}</header>
 );

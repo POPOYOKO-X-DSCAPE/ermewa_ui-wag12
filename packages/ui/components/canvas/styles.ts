@@ -43,12 +43,15 @@ const controls = css({
 
 // Re-skin the zoom / fit / lock buttons to the kit's elevated surfaces.
 const controlsButtons: XYVars = {
-	"--xy-controls-button-background-color": "var(--colors-s-bg-elevated-initial)",
+	"--xy-controls-button-background-color":
+		"var(--colors-s-bg-elevated-initial)",
 	"--xy-controls-button-background-color-hover":
 		"var(--colors-s-bg-elevated-hover)",
 	"--xy-controls-button-color": "var(--colors-s-fg-elevated-initial)",
-	"--xy-controls-button-color-hover": "var(--colors-s-fg-elevated-initial)",
-	"--xy-controls-button-border-color": "var(--colors-s-bg-default-hover)",
+	"--xy-controls-button-color-hover":
+		"var(--colors-s-fg-elevated-initial)",
+	"--xy-controls-button-border-color":
+		"var(--colors-s-bg-default-hover)",
 };
 
 const miniMap = css({

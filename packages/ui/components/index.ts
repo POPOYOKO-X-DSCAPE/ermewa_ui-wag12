@@ -9,6 +9,8 @@ export * from "./sidebar/sidebar";
 export * from "./snackbar/snackbar";
 export * from "./badge/badge";
 export * from "./form/input";
+export * from "./form/search-input";
+export * from "./autocomplete/autocomplete";
 export * from "./checkbox/checkbox";
 export * from "./dialog/dialog";
 export * from "./loader";

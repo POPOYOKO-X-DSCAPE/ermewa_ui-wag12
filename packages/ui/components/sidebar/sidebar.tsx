@@ -47,11 +47,17 @@ export interface SideBarProps extends StackProps {
  * </SideBar>
  */
 
-export const SideBar = ({ children, label }: SideBarProps) => {
+export const SideBar = ({
+	children,
+	label,
+	className,
+	...rest
+}: SideBarProps) => {
 	return (
 		<Stack
-			className={classNames("sidebar", Styles.Main)}
+			className={classNames("sidebar", Styles.Main, className)}
 			grow
+			{...rest}
 			// biome-ignore lint/a11y/useSemanticElements: nav region via role
 			role="navigation"
 			ariaLabel={label}
